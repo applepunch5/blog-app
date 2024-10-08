@@ -1,0 +1,54 @@
+import React from "react";
+import { Post } from "@/types";
+import { useRouter } from "next/router";
+import styles from "@/styles/Post.module.css";
+
+type Props = {
+  post: Post;
+}
+
+export async function getStaticPaths() {
+  const res = await fetch("http://127.0.0.1:3001/api/v1/posts");
+  const posts: Post[] = await res.json();
+
+  const paths = posts.map((post) => ({
+    params: {id: post.id.toString() },
+  }));
+  return {
+    paths,
+    fallback: true,
+  }
+}
+
+export async function getStaticProps({params}: {params: {id:string}}) {
+  // fetch 関数は、指定されたURLからHTTPリクエストを送り、レスポンスを待ちます。
+  const res = await fetch(`http://127.0.0.1:3001/api/v1/posts/${params.id}`);
+  const post = await res.json();
+
+  console.log(post);
+
+  // return 文で、posts を props オブジェクトとして返します。これにより、コンポーネント内で props.posts として取得したデータを使用することができます。
+  return{
+    props: {
+      post,
+    },
+    revalidate: 60,
+  };
+}
+
+const Post = ({ post }: Props) => {
+  const router = useRouter()
+
+  if(router.isFallback){
+    return <div>Loading...</div>
+  }
+  return (
+  <div className={styles.container}>
+    <div className={styles.title}>{post.title}</div>
+    <div className={styles.date}>{post.created_at}</div>
+    <p className={styles.content}>{post.content}</p>
+  </div>
+  );
+};
+
+export default Post;
