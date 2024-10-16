@@ -2,6 +2,8 @@ import Head from "next/head";
 import Link from 'next/link';
 import styles from "@/styles/Home.module.css";
 import { Post } from "@/types";
+import axios from 'axios';
+import { useRouter } from "next/router";
 
 type Props = {
   posts: Post[];
@@ -25,6 +27,17 @@ export async function getStaticProps() {
 }
 
 export default function Home({posts}: Props ) {
+  const router = useRouter();
+  const handleDelete = async (postId: string) => {
+    try {
+      await axios.delete(`http://127.0.0.1:3001/api/v1/posts/${postId}`)
+
+      router.reload();
+    } catch (err) {
+      alert("削除に失敗しました")
+    }
+
+  };
   return (
     <>
       <Head>
@@ -45,8 +58,11 @@ export default function Home({posts}: Props ) {
                 <h2>{post.title}</h2>
               </Link>
               <p>{post.content}</p>
-              <button className={styles.editButton}>Edit</button>
-              <button className={styles.deleteButton}>Delete</button>
+              <Link href={`/edit-post/${post.id}`}>
+                <button className={styles.editButton}>Edit</button>
+              </Link>
+
+              <button className={styles.deleteButton} onClick = {() => handleDelete(post.id)}>Delete</button>
             </div>
           ))}
         </div>
